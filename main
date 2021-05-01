@@ -1,0 +1,114 @@
+# задание 1
+"""Если я верно понял задание, нужно отсортировать список точек по их координатной четверти,
+начиная с 1-ой, в порядке (1, 4, 3, 2), причем в 1-ой четверти нужно первой вывести точку
+с минимальной абсолютной координатой x.
+
+Сортировка осуществляется некорректно, если есть точки, лежащие на координатных осях
+(для них невозможно определить четверть). Поэтому при генерации нулевые координаты
+увеличиваются на 1.
+"""
+
+from random import randint
+from matplotlib import pyplot
+from statistics import mean
+
+
+class Point:
+    """Класс 'Точка'"""
+    def __init__(self, x, y):
+        """Конструктор с параметрами"""
+        self.x = x
+        self.y = y
+
+    def __str__(self):
+        """Метод, возвращающий строкое представление объекта"""
+        return f"({self.x}, {self.y})"
+
+    def distance(self):
+        """Метод, возвращающий расстояние от точки до начала координат (0, 0)"""
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+    def quarter(self):
+        """Метод, возвращающий номер координатной четверти (от 1 до 4)"""
+        x, y = self.x, self.y
+        if x * y > 0:
+            return 1 if x > 0 else 3
+        else:
+            return 2 if x > 0 else 4
+
+    @staticmethod
+    def position(point):
+        """Статический метод, возвращающий корректную (в рамках задачи) позицию точки при сортировке"""
+        q = point.quarter()
+        if q == 1 or q == 3:
+            return q
+        elif q == 2:
+            return 4
+        else:
+            return 2
+
+
+def randint_not0(a, b):
+    """Функция, генерирующая целое число от a до b, исключая нули"""
+    x = randint(a, b)
+    return 1 if x == 0 else x
+
+
+def points_visualize(pts, txt):
+    """Функция, визуализирующая холст с точками"""
+    pyplot.plot([0, 200], [100, 100], color="blue")
+    pyplot.plot([100, 100], [0, 200], color="blue")
+    for i in range(len(pts)):
+        pyplot.text(pts[i].x + 100, pts[i].y + 100, str(i + 1), color="red")
+    pyplot.title(txt)
+    pyplot.show()
+
+
+def show_points(pts, txt):
+    """Функция, выводящая на экран список точек"""
+    print(f"\nСписок точек {txt}")
+    print(*pts)
+    points_visualize(pts, txt.capitalize())
+
+
+# ввод n
+correctInput = False
+while not correctInput:
+    try:
+        n = int(input("Введите количество точек: "))
+        correctInput = n > 0
+        if not correctInput:
+            raise ValueError
+    except ValueError:
+        print("Нужно ввести натуральное число!", end=" ")
+
+# генерация n точек
+points = [Point(randint_not0(-100, 100), randint_not0(-100, 100)) for p in range(n)]
+
+# вывод списка точек до сортировки
+show_points(points, "до сортировки")
+
+# сортировка
+try:
+    firstPoint = sorted(filter(lambda p: p.quarter() == 1, points), key=lambda p: abs(p.x))[0]
+    points.remove(firstPoint)
+    sortedPoints = [firstPoint] + sorted(points, key=Point.position)
+except IndexError:
+    sortedPoints = sorted(points, key=Point.position)
+
+# вывод списка точек после сортировки
+show_points(sortedPoints, "после сортировки")
+
+# вывод статистики
+distances = [p.distance() for p in points]
+print(f"Среднее расстояние до центра: {mean(distances)}")
+print(f"Минимальное расстояние до центра: {min(distances)}")
+print(f"Максимальное расстояние до центра: {max(distances)}")
+
+
+# задание 2
+from re import match, compile
+numbers = ["A123AA11", "А222АА123", "A12AA123", "A123CC1234", "AA123A12",
+           "АО36578", "B555PX39", "АН733147", "3733ММ55", "Е100ЕС702"]
+regexp = compile("^[А-ЯA-Zа-яa-z]\d{3}[А-ЯA-Zа-яa-z]{2}\d{2,3}$")
+print(*filter(lambda numb: match(regexp, numb), numbers))
